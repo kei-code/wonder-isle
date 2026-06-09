@@ -149,11 +149,19 @@ canvas {
   min-height: 100%;
   display: grid;
   place-items: center;
-  padding: 14px;
+  padding: 18px;
   background:
     radial-gradient(circle at 20% 10%, rgba(184, 240, 93, 0.16), transparent 32%),
     radial-gradient(circle at 78% 86%, rgba(76, 241, 212, 0.12), transparent 30%),
     #13231f;
+}
+
+.vine-layout {
+  position: relative;
+  width: min(100%, 580px);
+  display: grid;
+  place-items: center;
+  padding: 34px 26px;
 }
 
 .vine-board {
@@ -166,6 +174,84 @@ canvas {
   border-radius: 8px;
   background: rgba(7, 15, 12, 0.52);
   box-shadow: inset 0 0 0 1px rgba(255, 244, 208, 0.14);
+}
+
+.vine-marker {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  gap: 4px;
+  min-width: 58px;
+  color: var(--cream);
+  font-size: 12px;
+  font-weight: 900;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.44);
+  pointer-events: none;
+}
+
+.vine-source {
+  left: 0;
+  top: 8px;
+}
+
+.vine-flower {
+  right: 0;
+  bottom: 8px;
+}
+
+.marker-icon {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  display: block;
+  border-radius: 50%;
+}
+
+.vine-source .marker-icon {
+  background:
+    radial-gradient(circle at 50% 68%, #e6ffff 0 10%, transparent 11%),
+    radial-gradient(circle at 50% 60%, #4cf1d4 0 32%, transparent 34%),
+    radial-gradient(circle at 50% 50%, rgba(55, 215, 255, 0.26), transparent 68%);
+  box-shadow: 0 0 24px rgba(76, 241, 212, 0.52);
+}
+
+.vine-source .marker-icon::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 7px;
+  width: 24px;
+  height: 32px;
+  border-radius: 50% 50% 50% 8px;
+  background: linear-gradient(145deg, #e6ffff, #37d7ff 72%);
+  transform: translateX(-50%) rotate(-45deg);
+}
+
+.vine-flower .marker-icon {
+  background: radial-gradient(circle at 50% 50%, rgba(255, 215, 94, 0.28), transparent 66%);
+  box-shadow: 0 0 24px rgba(255, 215, 94, 0.52);
+}
+
+.vine-flower .marker-icon::before,
+.vine-flower .marker-icon::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+}
+
+.vine-flower .marker-icon::before {
+  background:
+    radial-gradient(circle at 50% 0%, #ff7c5f 0 22%, transparent 23%),
+    radial-gradient(circle at 100% 50%, #ff7c5f 0 22%, transparent 23%),
+    radial-gradient(circle at 50% 100%, #ff7c5f 0 22%, transparent 23%),
+    radial-gradient(circle at 0% 50%, #ff7c5f 0 22%, transparent 23%);
+}
+
+.vine-flower .marker-icon::after {
+  inset: 17px;
+  background: var(--sun);
 }
 
 .vine-tile {
@@ -266,20 +352,24 @@ canvas {
 
 .vine-tile.is-start::after,
 .vine-tile.is-goal::after {
-  left: 50%;
-  top: 50%;
-  width: 42%;
-  height: 42%;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
+  z-index: 1;
+  top: 42%;
+  width: 26%;
+  height: 16%;
+  border-radius: 999px;
+  transform: translateY(-50%);
 }
 
 .vine-tile.is-start::after {
+  left: 0;
   background: var(--aqua);
+  box-shadow: 0 0 16px rgba(76, 241, 212, 0.72);
 }
 
 .vine-tile.is-goal::after {
+  right: 0;
   background: var(--sun);
+  box-shadow: 0 0 16px rgba(255, 215, 94, 0.72);
 }
 
 .vine-complete {
@@ -299,6 +389,41 @@ canvas {
   .canvas-frame,
   .puzzle-frame {
     min-height: 430px;
+  }
+}
+
+@media (max-width: 420px) {
+  .vine-game {
+    padding: 10px;
+  }
+
+  .vine-layout {
+    padding: 32px 12px;
+  }
+
+  .vine-board {
+    gap: 5px;
+    padding: 6px;
+  }
+
+  .vine-marker {
+    min-width: 48px;
+    font-size: 11px;
+  }
+
+  .marker-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .vine-source {
+    left: 2px;
+    top: 0;
+  }
+
+  .vine-flower {
+    right: 2px;
+    bottom: 0;
   }
 }
 

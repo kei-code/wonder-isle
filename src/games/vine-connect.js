@@ -22,11 +22,21 @@ export function mountVineConnect(root) {
       </div>
       <div class="puzzle-frame">
         <div class="vine-game">
-          <div class="vine-board" data-ui="board"></div>
+          <div class="vine-layout">
+            <div class="vine-marker vine-source" aria-label="水源">
+              <span class="marker-icon" aria-hidden="true"></span>
+              <span class="marker-label">水源</span>
+            </div>
+            <div class="vine-board" data-ui="board"></div>
+            <div class="vine-marker vine-flower" aria-label="花">
+              <span class="marker-icon" aria-hidden="true"></span>
+              <span class="marker-label">花</span>
+            </div>
+          </div>
         </div>
         <div class="overlay is-visible" data-ui="overlay">
           <p class="result-kicker" data-ui="kicker">PUZZLE</p>
-          <p class="result-title" data-ui="title">ツルをつないで水を届けよう</p>
+          <p class="result-title" data-ui="title">水源から花までツルをつなげよう</p>
           <p class="result-score" data-ui="result">30s</p>
           <button class="primary-button" data-ui="start" type="button">START</button>
         </div>
@@ -121,8 +131,10 @@ export function mountVineConnect(root) {
     const pathMap = new Map();
     path.forEach((cell, index) => {
       const exits = [];
+      if (index === 0) exits.push("w");
       if (index > 0) exits.push(directionBetween(cell, path[index - 1]));
       if (index < path.length - 1) exits.push(directionBetween(cell, path[index + 1]));
+      if (index === path.length - 1) exits.push("e");
       pathMap.set(key(cell[0], cell[1]), exits);
     });
 
@@ -167,6 +179,14 @@ export function mountVineConnect(root) {
 
   function traceConnection() {
     const connected = new Set();
+    const startTile = board[0][0];
+    if (!exitsFor(startTile).includes("w")) {
+      connectedSet = connected;
+      ui.goal.textContent = "未接続";
+      ui.chain.textContent = "0";
+      return false;
+    }
+
     const queue = [[0, 0]];
 
     while (queue.length) {
@@ -186,7 +206,8 @@ export function mountVineConnect(root) {
     }
 
     connectedSet = connected;
-    const complete = connected.has(key(size - 1, size - 1));
+    const goalTile = board[size - 1][size - 1];
+    const complete = connected.has(key(size - 1, size - 1)) && exitsFor(goalTile).includes("e");
     ui.goal.textContent = complete ? "接続" : "未接続";
     ui.chain.textContent = String(connected.size);
     return complete;
@@ -235,7 +256,7 @@ export function mountVineConnect(root) {
     } else {
       ui.kicker.textContent = "CLEAR";
     }
-    ui.title.textContent = `${moves}手で水が届いた`;
+    ui.title.textContent = `${moves}手で花まで水が届いた`;
     ui.result.textContent = score.toLocaleString();
     ui.start.textContent = "NEXT";
     ui.next.textContent = "次の島";
