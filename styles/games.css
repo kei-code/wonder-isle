@@ -145,19 +145,29 @@ canvas {
 }
 
 .vine-game {
+  position: relative;
   width: 100%;
   min-height: 100%;
   display: grid;
   place-items: center;
   padding: 18px;
   background:
-    radial-gradient(circle at 20% 10%, rgba(184, 240, 93, 0.16), transparent 32%),
-    radial-gradient(circle at 78% 86%, rgba(76, 241, 212, 0.12), transparent 30%),
+    linear-gradient(rgba(10, 24, 18, 0.2), rgba(10, 24, 18, 0.42)),
+    url("../assets/games/vine-connect/puzzle-garden-bg.png") center / cover,
     #13231f;
+}
+
+.vine-game::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 50%, rgba(9, 18, 14, 0.46) 0 44%, rgba(9, 18, 14, 0.08) 72%);
 }
 
 .vine-layout {
   position: relative;
+  z-index: 1;
   width: min(100%, 580px);
   display: grid;
   place-items: center;
