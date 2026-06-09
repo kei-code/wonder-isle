@@ -350,6 +350,18 @@ canvas {
     #263c2c;
 }
 
+.vine-tile.is-fixed {
+  cursor: default;
+  border-color: rgba(255, 244, 208, 0.38);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 244, 208, 0.14), transparent 45%),
+    #294232;
+}
+
+.vine-tile.is-fixed .path {
+  transition: none;
+}
+
 .vine-tile.is-start::after,
 .vine-tile.is-goal::after {
   z-index: 1;

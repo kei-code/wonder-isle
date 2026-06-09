@@ -86,30 +86,21 @@ export function mountVineConnect(root) {
   }
 
   function makePath() {
-    const path = [[0, 0]];
-    const visited = new Set(["0-0"]);
+    const path = [
+      [0, 0],
+      [0, 1],
+    ];
+    const steps = shuffle(["s", "s", "s", "s", "e", "e"]);
     let row = 0;
-    let col = 0;
+    let col = 1;
 
-    while (row !== size - 1 || col !== size - 1) {
-      const options = shuffle([
-        [row + 1, col],
-        [row, col + 1],
-        [row - 1, col],
-        [row, col - 1],
-      ]).filter(([nextRow, nextCol]) => {
-        if (nextRow < 0 || nextCol < 0 || nextRow >= size || nextCol >= size) return false;
-        if (visited.has(key(nextRow, nextCol))) return false;
-        const towardGoal = nextRow >= row || nextCol >= col;
-        return towardGoal || Math.random() < 0.22;
-      });
-
-      const next = options[0] || (row < size - 1 ? [row + 1, col] : [row, col + 1]);
-      row = next[0];
-      col = next[1];
+    steps.forEach((step) => {
+      row += dirs[step][0];
+      col += dirs[step][1];
       path.push([row, col]);
-      visited.add(key(row, col));
-    }
+    });
+
+    path.push([size - 1, size - 1]);
     return path;
   }
 
@@ -126,6 +117,52 @@ export function mountVineConnect(root) {
     return "corner";
   }
 
+  function makeTile(row, col, exits, fixed = false) {
+    const sorted = [...exits].sort().join("");
+    let base = ["n", "s"];
+    let rot = 0;
+
+    if (sorted === "ew") {
+      base = ["n", "s"];
+      rot = 1;
+    } else if (sorted === "ns") {
+      base = ["n", "s"];
+      rot = 0;
+    } else if (sorted === "en") {
+      base = ["n", "e"];
+      rot = 0;
+    } else if (sorted === "es") {
+      base = ["n", "e"];
+      rot = 1;
+    } else if (sorted === "sw") {
+      base = ["n", "e"];
+      rot = 2;
+    } else if (sorted === "nw") {
+      base = ["n", "e"];
+      rot = 3;
+    } else {
+      base = ["n", "e", "s"];
+      rot = Math.floor(Math.random() * 4);
+    }
+
+    return { row, col, base, rot, fixed };
+  }
+
+  function makeFillerTile(row, col) {
+    const templates = [
+      ["n", "s"],
+      ["e", "w"],
+      ["n", "e"],
+      ["e", "s"],
+      ["s", "w"],
+      ["n", "w"],
+    ];
+    const exits = templates[Math.floor(Math.random() * templates.length)];
+    const tile = makeTile(row, col, exits);
+    tile.rot = Math.floor(Math.random() * 4);
+    return tile;
+  }
+
   function generateBoard() {
     const path = makePath();
     const pathMap = new Map();
@@ -140,21 +177,11 @@ export function mountVineConnect(root) {
 
     board = Array.from({ length: size }, (_, row) =>
       Array.from({ length: size }, (_, col) => {
-        const base = pathMap.get(key(row, col)) || shuffle(order).slice(0, Math.random() < 0.25 ? 3 : 2);
-        return {
-          row,
-          col,
-          base,
-          rot: Math.floor(Math.random() * 4),
-          onPath: pathMap.has(key(row, col)),
-        };
+        const exits = pathMap.get(key(row, col));
+        if (exits) return makeTile(row, col, exits, row === 0 && col === 0 || row === size - 1 && col === size - 1);
+        return makeFillerTile(row, col);
       }),
     );
-
-    const start = board[0][0];
-    const goal = board[size - 1][size - 1];
-    start.rot = (start.rot + 1) % 4;
-    goal.rot = (goal.rot + 2) % 4;
   }
 
   function renderBoard() {
@@ -171,6 +198,10 @@ export function mountVineConnect(root) {
       button.setAttribute("aria-label", `ツル ${tile.row + 1}行 ${tile.col + 1}列`);
       if (tile.row === 0 && tile.col === 0) button.classList.add("is-start");
       if (tile.row === size - 1 && tile.col === size - 1) button.classList.add("is-goal");
+      if (tile.fixed) {
+        button.classList.add("is-fixed");
+        button.disabled = true;
+      }
       if (connectedSet.has(key(tile.row, tile.col))) button.classList.add("is-connected");
       button.innerHTML = '<span class="path"></span>';
       ui.board.append(button);
@@ -284,6 +315,7 @@ export function mountVineConnect(root) {
     const row = Number(button.dataset.row);
     const col = Number(button.dataset.col);
     const tile = board[row][col];
+    if (tile.fixed) return;
     tile.rot = (tile.rot + 1) % 4;
     moves += 1;
     playTone(360 + (connectedSet.size % 8) * 30, 0.05, "triangle", 0.018);
