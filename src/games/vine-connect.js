@@ -23,14 +23,14 @@ export function mountVineConnect(root) {
       <div class="puzzle-frame">
         <div class="vine-game">
           <div class="vine-layout">
-            <div class="vine-marker vine-source" aria-label="水源">
-              <span class="marker-icon" aria-hidden="true"></span>
-              <span class="marker-label">水源</span>
+            <div class="vine-endpoint vine-start-tile" aria-label="スタート">
+              <span class="endpoint-label">START</span>
+              <span class="path" aria-hidden="true"></span>
             </div>
             <div class="vine-board" data-ui="board"></div>
-            <div class="vine-marker vine-flower" aria-label="花">
-              <span class="marker-icon" aria-hidden="true"></span>
-              <span class="marker-label">花</span>
+            <div class="vine-endpoint vine-goal-tile" aria-label="ゴール">
+              <span class="endpoint-label">GOAL</span>
+              <span class="path" aria-hidden="true"></span>
             </div>
           </div>
         </div>
@@ -86,21 +86,16 @@ export function mountVineConnect(root) {
   }
 
   function makePath() {
-    const path = [
-      [0, 0],
-      [0, 1],
-    ];
-    const steps = shuffle(["s", "s", "s", "s", "e", "e"]);
+    const path = [[0, 0]];
+    const steps = shuffle(["s", "s", "s", "s", "e", "e", "e", "e"]);
     let row = 0;
-    let col = 1;
+    let col = 0;
 
     steps.forEach((step) => {
       row += dirs[step][0];
       col += dirs[step][1];
       path.push([row, col]);
     });
-
-    path.push([size - 1, size - 1]);
     return path;
   }
 
@@ -117,7 +112,7 @@ export function mountVineConnect(root) {
     return "corner";
   }
 
-  function makeTile(row, col, exits, fixed = false) {
+  function makeTile(row, col, exits) {
     const sorted = [...exits].sort().join("");
     let base = ["n", "s"];
     let rot = 0;
@@ -145,7 +140,7 @@ export function mountVineConnect(root) {
       rot = Math.floor(Math.random() * 4);
     }
 
-    return { row, col, base, rot, fixed };
+    return { row, col, base, rot };
   }
 
   function makeFillerTile(row, col) {
@@ -178,10 +173,16 @@ export function mountVineConnect(root) {
     board = Array.from({ length: size }, (_, row) =>
       Array.from({ length: size }, (_, col) => {
         const exits = pathMap.get(key(row, col));
-        if (exits) return makeTile(row, col, exits, row === 0 && col === 0 || row === size - 1 && col === size - 1);
+        if (exits) {
+          const tile = makeTile(row, col, exits);
+          tile.rot = Math.floor(Math.random() * 4);
+          return tile;
+        }
         return makeFillerTile(row, col);
       }),
     );
+
+    if (traceConnection({ silent: true })) generateBoard();
   }
 
   function renderBoard() {
@@ -196,25 +197,22 @@ export function mountVineConnect(root) {
       button.dataset.shape = shapeFromBase(tile.base);
       button.style.setProperty("--rot", String(tile.rot));
       button.setAttribute("aria-label", `ツル ${tile.row + 1}行 ${tile.col + 1}列`);
-      if (tile.row === 0 && tile.col === 0) button.classList.add("is-start");
-      if (tile.row === size - 1 && tile.col === size - 1) button.classList.add("is-goal");
-      if (tile.fixed) {
-        button.classList.add("is-fixed");
-        button.disabled = true;
-      }
-      if (connectedSet.has(key(tile.row, tile.col))) button.classList.add("is-connected");
+      if (connectedSet.has(key(tile.row, tile.col)) && state === "ended") button.classList.add("is-connected");
       button.innerHTML = '<span class="path"></span>';
       ui.board.append(button);
     });
   }
 
-  function traceConnection() {
+  function traceConnection(options = {}) {
+    const silent = options.silent === true;
     const connected = new Set();
     const startTile = board[0][0];
     if (!exitsFor(startTile).includes("w")) {
       connectedSet = connected;
-      ui.goal.textContent = "未接続";
-      ui.chain.textContent = "0";
+      if (!silent) {
+        ui.goal.textContent = "未接続";
+        ui.chain.textContent = "0";
+      }
       return false;
     }
 
@@ -239,8 +237,10 @@ export function mountVineConnect(root) {
     connectedSet = connected;
     const goalTile = board[size - 1][size - 1];
     const complete = connected.has(key(size - 1, size - 1)) && exitsFor(goalTile).includes("e");
-    ui.goal.textContent = complete ? "接続" : "未接続";
-    ui.chain.textContent = String(connected.size);
+    if (!silent) {
+      ui.goal.textContent = complete ? "接続" : "未接続";
+      ui.chain.textContent = String(connected.size);
+    }
     return complete;
   }
 
@@ -315,7 +315,6 @@ export function mountVineConnect(root) {
     const row = Number(button.dataset.row);
     const col = Number(button.dataset.col);
     const tile = board[row][col];
-    if (tile.fixed) return;
     tile.rot = (tile.rot + 1) % 4;
     moves += 1;
     playTone(360 + (connectedSet.size % 8) * 30, 0.05, "triangle", 0.018);
