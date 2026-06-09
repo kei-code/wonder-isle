@@ -3,143 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="ワクワクする島々を探索しながら、短く遊べるWebゲームに出会えるゲームポータル。"
+    />
     <title>ワンダーアイル</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/site.css" />
+    <link rel="stylesheet" href="styles/games.css" />
   </head>
   <body>
-    <main class="site-shell">
-      <section class="map-view" id="mapView" aria-label="ワンダーアイル">
-        <div class="map-stage" id="mapStage">
-          <img class="map-art" src="assets/wonder-isle-bg.png" alt="" aria-hidden="true" />
-          <div class="map-vignette" aria-hidden="true"></div>
-          <div class="map-glints" aria-hidden="true">
-            <span class="glint g1"></span>
-            <span class="glint g2"></span>
-            <span class="glint g3"></span>
-            <span class="glint g4"></span>
-          </div>
-
-          <header class="site-header">
-            <div class="brand-block">
-              <p class="eyebrow">EXPLORE MINI GAMES</p>
-              <h1>ワンダーアイル</h1>
-            </div>
-            <button class="round-button" id="randomButton" type="button" aria-label="ランダムにあそぶ" title="ランダムにあそぶ">
-              ?
-            </button>
-          </header>
-
-          <button class="map-spot spot-volcano is-active" type="button" data-spot="target-rush" aria-pressed="true">
-            <span class="spot-ring"></span>
-            <span class="spot-pin"></span>
-            <span class="spot-label">火口アリーナ</span>
-          </button>
-
-          <button class="map-spot spot-forest" type="button" data-spot="forest-lab" aria-pressed="false">
-            <span class="spot-ring"></span>
-            <span class="spot-pin cool"></span>
-            <span class="spot-label">森の研究所</span>
-          </button>
-
-          <button class="map-spot spot-wind" type="button" data-spot="wind-tower" aria-pressed="false">
-            <span class="spot-ring"></span>
-            <span class="spot-pin sky"></span>
-            <span class="spot-label">風車タワー</span>
-          </button>
-
-          <button class="map-spot spot-lagoon" type="button" data-spot="lagoon-dock" aria-pressed="false">
-            <span class="spot-ring"></span>
-            <span class="spot-pin aqua"></span>
-            <span class="spot-label">入り江の桟橋</span>
-          </button>
-
-          <button class="map-spot spot-night" type="button" data-spot="crystal-gate" aria-pressed="false">
-            <span class="spot-ring"></span>
-            <span class="spot-pin violet"></span>
-            <span class="spot-label">結晶ゲート</span>
-          </button>
-
-          <section class="spot-panel" aria-live="polite">
-            <div class="spot-copy">
-              <p class="eyebrow" id="spotType">REFLEX</p>
-              <h2 id="spotTitle">ターゲットラッシュ</h2>
-              <p id="spotDescription">火口アリーナに現れる光る的を、10秒で撃ち抜こう。</p>
-            </div>
-            <button class="launch-button" id="launchButton" type="button">出発</button>
-          </section>
-
-          <nav class="map-actions" aria-label="ショートカット">
-            <button class="action-button primary" id="quickPlayButton" type="button">すぐあそぶ</button>
-            <button class="action-button" id="newGameButton" type="button">新着</button>
-            <button class="action-button" id="discoverButton" type="button">発見</button>
-          </nav>
-        </div>
-      </section>
-
-      <section class="game-view is-hidden" id="gameView" aria-label="ターゲットラッシュ">
-        <header class="game-header">
-          <button class="icon-button" id="backButton" type="button" aria-label="島へ戻る" title="島へ戻る">←</button>
-          <div class="game-title-block">
-            <p class="eyebrow">VOLCANO ARENA</p>
-            <h2>ターゲットラッシュ</h2>
-          </div>
-          <button class="icon-button" id="soundButton" type="button" aria-label="サウンド切替" title="サウンド切替">
-            <span id="soundIcon">♪</span>
-          </button>
-        </header>
-
-        <section class="stage-wrap">
-          <div class="hud" aria-live="polite">
-            <div class="meter">
-              <span>TIME</span>
-              <strong id="timeText">10.0</strong>
-            </div>
-            <div class="meter">
-              <span>SCORE</span>
-              <strong id="scoreText">0</strong>
-            </div>
-            <div class="meter">
-              <span>COMBO</span>
-              <strong id="comboText">0</strong>
-            </div>
-            <div class="meter">
-              <span>BEST</span>
-              <strong id="bestText">0</strong>
-            </div>
-          </div>
-
-          <div class="canvas-frame">
-            <canvas id="gameCanvas" width="960" height="560"></canvas>
-            <div class="overlay is-visible" id="startOverlay">
-              <p class="result-kicker" id="overlayKicker">READY</p>
-              <p class="result-title" id="overlayTitle">火口アリーナへ出発</p>
-              <p class="result-score" id="overlayScore">0</p>
-              <button class="primary-button" id="startButton" type="button">START</button>
-            </div>
-          </div>
-
-          <footer class="bottombar">
-            <div class="stat">
-              <span>HIT</span>
-              <strong id="hitText">0</strong>
-            </div>
-            <div class="stat">
-              <span>MISS</span>
-              <strong id="missText">0</strong>
-            </div>
-            <div class="stat">
-              <span>ACCURACY</span>
-              <strong id="accuracyText">0%</strong>
-            </div>
-            <div class="stat">
-              <span>MAX COMBO</span>
-              <strong id="maxComboText">0</strong>
-            </div>
-          </footer>
-        </section>
-      </section>
-    </main>
-
-    <script src="app.js"></script>
+    <main class="site-shell" id="app"></main>
+    <script type="module" src="src/main.js"></script>
   </body>
 </html>

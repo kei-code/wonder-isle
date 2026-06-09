@@ -1,0 +1,296 @@
+import { playTone } from "../core/audio.js";
+import { readBest, writeBest } from "../core/storage.js";
+
+const dirs = {
+  n: [-1, 0],
+  e: [0, 1],
+  s: [1, 0],
+  w: [0, -1],
+};
+
+const opposite = { n: "s", e: "w", s: "n", w: "e" };
+const order = ["n", "e", "s", "w"];
+
+export function mountVineConnect(root) {
+  root.innerHTML = `
+    <section class="stage-wrap">
+      <div class="hud" aria-live="polite">
+        <div class="meter"><span>TIME</span><strong data-ui="time">30.0</strong></div>
+        <div class="meter"><span>MOVES</span><strong data-ui="moves">0</strong></div>
+        <div class="meter"><span>STAGE</span><strong data-ui="stage">1</strong></div>
+        <div class="meter"><span>BEST</span><strong data-ui="best">0</strong></div>
+      </div>
+      <div class="puzzle-frame">
+        <div class="vine-game">
+          <div class="vine-board" data-ui="board"></div>
+        </div>
+        <div class="overlay is-visible" data-ui="overlay">
+          <p class="result-kicker" data-ui="kicker">PUZZLE</p>
+          <p class="result-title" data-ui="title">ツルをつないで水を届けよう</p>
+          <p class="result-score" data-ui="result">30s</p>
+          <button class="primary-button" data-ui="start" type="button">START</button>
+        </div>
+      </div>
+      <footer class="bottombar">
+        <div class="stat"><span>GOAL</span><strong data-ui="goal">未接続</strong></div>
+        <div class="stat"><span>CHAIN</span><strong data-ui="chain">0</strong></div>
+        <div class="stat"><span>SCORE</span><strong data-ui="score">0</strong></div>
+        <div class="stat"><span>NEXT</span><strong data-ui="next">クリア後</strong></div>
+      </footer>
+    </section>
+  `;
+
+  const ui = Object.fromEntries([...root.querySelectorAll("[data-ui]")].map((el) => [el.dataset.ui, el]));
+  const size = 5;
+  const duration = 30000;
+  let frameId = 0;
+  let stage = 1;
+  let board = [];
+  let startTime = 0;
+  let moves = 0;
+  let score = 0;
+  let state = "ready";
+  let connectedSet = new Set();
+  let best = readBest("vineConnectBest");
+  let lastTimeLeft = duration / 1000;
+
+  function rotateExit(dir, turns) {
+    return order[(order.indexOf(dir) + turns) % 4];
+  }
+
+  function exitsFor(tile) {
+    return tile.base.map((dir) => rotateExit(dir, tile.rot));
+  }
+
+  function key(row, col) {
+    return `${row}-${col}`;
+  }
+
+  function shuffle(list) {
+    const copy = [...list];
+    for (let i = copy.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  }
+
+  function makePath() {
+    const path = [[0, 0]];
+    const visited = new Set(["0-0"]);
+    let row = 0;
+    let col = 0;
+
+    while (row !== size - 1 || col !== size - 1) {
+      const options = shuffle([
+        [row + 1, col],
+        [row, col + 1],
+        [row - 1, col],
+        [row, col - 1],
+      ]).filter(([nextRow, nextCol]) => {
+        if (nextRow < 0 || nextCol < 0 || nextRow >= size || nextCol >= size) return false;
+        if (visited.has(key(nextRow, nextCol))) return false;
+        const towardGoal = nextRow >= row || nextCol >= col;
+        return towardGoal || Math.random() < 0.22;
+      });
+
+      const next = options[0] || (row < size - 1 ? [row + 1, col] : [row, col + 1]);
+      row = next[0];
+      col = next[1];
+      path.push([row, col]);
+      visited.add(key(row, col));
+    }
+    return path;
+  }
+
+  function directionBetween(a, b) {
+    const dr = b[0] - a[0];
+    const dc = b[1] - a[1];
+    return Object.entries(dirs).find(([, delta]) => delta[0] === dr && delta[1] === dc)[0];
+  }
+
+  function shapeFromBase(base) {
+    if (base.length === 3) return "tee";
+    const sorted = [...base].sort().join("");
+    if (sorted === "ns" || sorted === "ew") return "straight";
+    return "corner";
+  }
+
+  function generateBoard() {
+    const path = makePath();
+    const pathMap = new Map();
+    path.forEach((cell, index) => {
+      const exits = [];
+      if (index > 0) exits.push(directionBetween(cell, path[index - 1]));
+      if (index < path.length - 1) exits.push(directionBetween(cell, path[index + 1]));
+      pathMap.set(key(cell[0], cell[1]), exits);
+    });
+
+    board = Array.from({ length: size }, (_, row) =>
+      Array.from({ length: size }, (_, col) => {
+        const base = pathMap.get(key(row, col)) || shuffle(order).slice(0, Math.random() < 0.25 ? 3 : 2);
+        return {
+          row,
+          col,
+          base,
+          rot: Math.floor(Math.random() * 4),
+          onPath: pathMap.has(key(row, col)),
+        };
+      }),
+    );
+
+    const start = board[0][0];
+    const goal = board[size - 1][size - 1];
+    start.rot = (start.rot + 1) % 4;
+    goal.rot = (goal.rot + 2) % 4;
+  }
+
+  function renderBoard() {
+    ui.board.style.setProperty("--size", String(size));
+    ui.board.innerHTML = "";
+    board.flat().forEach((tile) => {
+      const button = document.createElement("button");
+      button.className = "vine-tile";
+      button.type = "button";
+      button.dataset.row = String(tile.row);
+      button.dataset.col = String(tile.col);
+      button.dataset.shape = shapeFromBase(tile.base);
+      button.style.setProperty("--rot", String(tile.rot));
+      button.setAttribute("aria-label", `ツル ${tile.row + 1}行 ${tile.col + 1}列`);
+      if (tile.row === 0 && tile.col === 0) button.classList.add("is-start");
+      if (tile.row === size - 1 && tile.col === size - 1) button.classList.add("is-goal");
+      if (connectedSet.has(key(tile.row, tile.col))) button.classList.add("is-connected");
+      button.innerHTML = '<span class="path"></span>';
+      ui.board.append(button);
+    });
+  }
+
+  function traceConnection() {
+    const connected = new Set();
+    const queue = [[0, 0]];
+
+    while (queue.length) {
+      const [row, col] = queue.shift();
+      const id = key(row, col);
+      if (connected.has(id)) continue;
+      connected.add(id);
+      const tile = board[row][col];
+      exitsFor(tile).forEach((dir) => {
+        const [dr, dc] = dirs[dir];
+        const nextRow = row + dr;
+        const nextCol = col + dc;
+        if (nextRow < 0 || nextCol < 0 || nextRow >= size || nextCol >= size) return;
+        const next = board[nextRow][nextCol];
+        if (exitsFor(next).includes(opposite[dir])) queue.push([nextRow, nextCol]);
+      });
+    }
+
+    connectedSet = connected;
+    const complete = connected.has(key(size - 1, size - 1));
+    ui.goal.textContent = complete ? "接続" : "未接続";
+    ui.chain.textContent = String(connected.size);
+    return complete;
+  }
+
+  function currentTimeLeft() {
+    if (state === "ready") return duration / 1000;
+    if (state === "ended") return lastTimeLeft;
+    return Math.max(0, (duration - (performance.now() - startTime)) / 1000);
+  }
+
+  function updateHud() {
+    ui.time.textContent = currentTimeLeft().toFixed(1);
+    ui.moves.textContent = String(moves);
+    ui.stage.textContent = String(stage);
+    ui.best.textContent = best.toLocaleString();
+    ui.score.textContent = score.toLocaleString();
+  }
+
+  function startStage() {
+    state = "playing";
+    moves = 0;
+    score = 0;
+    startTime = performance.now();
+    lastTimeLeft = duration / 1000;
+    connectedSet = new Set();
+    generateBoard();
+    traceConnection();
+    renderBoard();
+    ui.overlay.classList.remove("is-visible");
+    ui.next.textContent = "クリア後";
+    updateHud();
+    playTone(440, 0.08, "triangle", 0.03);
+  }
+
+  function completeStage() {
+    lastTimeLeft = currentTimeLeft();
+    state = "ended";
+    const timeBonus = Math.round(lastTimeLeft * 90);
+    const moveBonus = Math.max(0, 1200 - moves * 45);
+    score = 1000 + timeBonus + moveBonus + stage * 150;
+    if (score > best) {
+      best = score;
+      writeBest("vineConnectBest", best);
+      ui.kicker.textContent = "NEW BEST";
+    } else {
+      ui.kicker.textContent = "CLEAR";
+    }
+    ui.title.textContent = `${moves}手で水が届いた`;
+    ui.result.textContent = score.toLocaleString();
+    ui.start.textContent = "NEXT";
+    ui.next.textContent = "次の島";
+    ui.overlay.classList.add("is-visible");
+    ui.board.classList.add("vine-complete");
+    playTone(760, 0.14, "triangle", 0.055);
+    setTimeout(() => ui.board.classList.remove("vine-complete"), 900);
+    updateHud();
+  }
+
+  function timeUp() {
+    lastTimeLeft = 0;
+    state = "ended";
+    ui.kicker.textContent = "TIME UP";
+    ui.title.textContent = "もう一度つないでみよう";
+    ui.result.textContent = "0";
+    ui.start.textContent = "RETRY";
+    ui.overlay.classList.add("is-visible");
+    playTone(180, 0.16, "sawtooth", 0.02);
+  }
+
+  function handleBoardClick(event) {
+    const button = event.target.closest(".vine-tile");
+    if (!button || state !== "playing") return;
+    const row = Number(button.dataset.row);
+    const col = Number(button.dataset.col);
+    const tile = board[row][col];
+    tile.rot = (tile.rot + 1) % 4;
+    moves += 1;
+    playTone(360 + (connectedSet.size % 8) * 30, 0.05, "triangle", 0.018);
+    const complete = traceConnection();
+    renderBoard();
+    updateHud();
+    if (complete) completeStage();
+  }
+
+  function tick() {
+    if (state === "playing" && currentTimeLeft() <= 0) timeUp();
+    updateHud();
+    frameId = requestAnimationFrame(tick);
+  }
+
+  ui.start.addEventListener("click", () => {
+    if (state === "ended" && ui.start.textContent === "NEXT") stage += 1;
+    startStage();
+  });
+  ui.board.addEventListener("click", handleBoardClick);
+  generateBoard();
+  traceConnection();
+  renderBoard();
+  updateHud();
+  frameId = requestAnimationFrame(tick);
+
+  return () => {
+    cancelAnimationFrame(frameId);
+    ui.board.removeEventListener("click", handleBoardClick);
+  };
+}

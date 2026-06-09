@@ -1,0 +1,112 @@
+:root {
+  color-scheme: dark;
+  --ink: #12222c;
+  --text: #fff9e8;
+  --muted: #ccebf4;
+  --panel: rgba(12, 30, 42, 0.9);
+  --cream: #fff4d0;
+  --sun: #ffd75e;
+  --coral: #ff7c5f;
+  --aqua: #4cf1d4;
+  --lime: #b8f05d;
+  --cyan: #37d7ff;
+  --violet: #947cff;
+  --shadow: rgba(5, 28, 39, 0.38);
+  --game-bg: #151719;
+  --game-panel: #20242a;
+  --game-line: #3b444f;
+  --game-muted: #aab3bd;
+  --gold: #ffd166;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  overflow-x: hidden;
+  background: #0b607c;
+  color: var(--text);
+  font-family: "Segoe UI", "Yu Gothic UI", "Meiryo", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  min-width: 0;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
+  touch-action: manipulation;
+}
+
+button:focus-visible {
+  outline: 4px solid rgba(255, 244, 208, 0.92);
+  outline-offset: 3px;
+}
+
+h1,
+h2,
+h3,
+p {
+  letter-spacing: 0;
+}
+
+.site-shell {
+  width: 100%;
+  min-height: 100svh;
+}
+
+.is-hidden {
+  display: none !important;
+}
+
+.eyebrow {
+  margin: 0 0 4px;
+  color: var(--sun);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.icon-button,
+.round-button,
+.action-button,
+.launch-button,
+.primary-button {
+  box-shadow: 0 14px 28px var(--shadow);
+}
+
+.icon-button,
+.round-button {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+}
+
+.primary-button {
+  min-width: 160px;
+  min-height: 48px;
+  padding: 0 24px;
+  color: #141712;
+  background: var(--lime);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
