@@ -106,6 +106,7 @@ canvas {
 .overlay {
   position: absolute;
   inset: 0;
+  z-index: 30;
   display: none;
   place-items: center;
   align-content: center;
@@ -144,15 +145,54 @@ canvas {
   font-variant-numeric: tabular-nums;
 }
 
+.result-hint {
+  max-width: 280px;
+  margin: -4px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.vine-stage {
+  grid-template-rows: auto minmax(300px, 1fr) auto;
+}
+
+.vine-stage .hud,
+.vine-stage .bottombar {
+  gap: 6px;
+}
+
+.vine-stage .meter,
+.vine-stage .stat {
+  min-height: 40px;
+  padding: 5px 8px;
+}
+
+.vine-stage .meter span,
+.vine-stage .stat span {
+  font-size: 10px;
+}
+
+.vine-stage .meter strong {
+  margin-top: 2px;
+  font-size: 20px;
+}
+
+.vine-stage .stat strong {
+  margin-top: 3px;
+  font-size: 16px;
+}
+
 .vine-game {
   position: relative;
   width: 100%;
   min-height: 100%;
   display: grid;
   place-items: center;
-  padding: 18px;
+  padding: 42px 18px;
   background:
-    linear-gradient(rgba(10, 24, 18, 0.08), rgba(10, 24, 18, 0.18)),
+    linear-gradient(rgba(10, 24, 18, 0.02), rgba(10, 24, 18, 0.08)),
     url("../assets/games/vine-connect/puzzle-garden-bg.png") center / cover,
     #13231f;
 }
@@ -168,7 +208,7 @@ canvas {
 .vine-layout {
   position: relative;
   z-index: 1;
-  width: min(100%, 680px);
+  width: min(92%, 640px);
   aspect-ratio: 7 / 5;
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -176,7 +216,7 @@ canvas {
   gap: 6px;
   padding: 8px;
   border-radius: 8px;
-  background: rgba(7, 15, 12, 0.16);
+  background: rgba(7, 15, 12, 0.08);
   box-shadow:
     0 18px 36px rgba(0, 0, 0, 0.16),
     inset 0 0 0 1px rgba(255, 244, 208, 0.16);
@@ -207,7 +247,7 @@ canvas {
   height: 100%;
   display: grid;
   place-items: center;
-  overflow: hidden;
+  overflow: visible;
   border: 2px solid rgba(255, 244, 208, 0.5);
   border-radius: 8px;
   background:
@@ -231,18 +271,22 @@ canvas {
 }
 
 .endpoint-label {
-  position: relative;
+  position: absolute;
   z-index: 5;
-  max-width: 86%;
-  padding: 4px 5px;
+  left: 50%;
+  top: 50%;
+  max-width: none;
+  padding: 3px 4px;
   border-radius: 6px;
   color: var(--ink);
   background: var(--cream);
-  font-size: clamp(7px, 2vw, 10px);
+  font-size: clamp(7px, 1.7vw, 9px);
   font-weight: 900;
   line-height: 1;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
   white-space: nowrap;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
 }
 
 .vine-endpoint .path {
@@ -444,6 +488,10 @@ canvas {
     grid-template-rows: auto minmax(430px, 1fr) auto;
   }
 
+  .vine-stage {
+    grid-template-rows: auto minmax(390px, 1fr) auto;
+  }
+
   .canvas-frame,
   .puzzle-frame {
     min-height: 430px;
@@ -452,12 +500,13 @@ canvas {
 
 @media (max-width: 420px) {
   .vine-game {
-    padding: 10px;
+    padding: 34px 8px;
   }
 
   .vine-layout {
     gap: 5px;
     padding: 6px;
+    width: min(96%, 640px);
   }
 
   .vine-marker {

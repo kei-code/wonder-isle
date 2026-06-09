@@ -13,7 +13,7 @@ const order = ["n", "e", "s", "w"];
 
 export function mountVineConnect(root) {
   root.innerHTML = `
-    <section class="stage-wrap">
+    <section class="stage-wrap vine-stage">
       <div class="hud" aria-live="polite">
         <div class="meter"><span>TIME</span><strong data-ui="time">30.0</strong></div>
         <div class="meter"><span>MOVES</span><strong data-ui="moves">0</strong></div>
@@ -34,10 +34,11 @@ export function mountVineConnect(root) {
             </div>
           </div>
         </div>
-        <div class="overlay is-visible" data-ui="overlay">
+        <div class="overlay" data-ui="overlay">
           <p class="result-kicker" data-ui="kicker">PUZZLE</p>
           <p class="result-title" data-ui="title">水源から花までツルをつなげよう</p>
           <p class="result-score" data-ui="result">30s</p>
+          <p class="result-hint" data-ui="hint">タイルをタップしてツルを回そう</p>
           <button class="primary-button" data-ui="start" type="button">START</button>
         </div>
       </div>
@@ -291,6 +292,7 @@ export function mountVineConnect(root) {
     }
     ui.title.textContent = `${moves}手で花まで水が届いた`;
     ui.result.textContent = score.toLocaleString();
+    ui.hint.textContent = "NEXTを押すと次のステージに進みます";
     ui.start.textContent = "NEXT";
     ui.next.textContent = "次の島";
     ui.overlay.classList.add("is-visible");
@@ -306,6 +308,7 @@ export function mountVineConnect(root) {
     ui.kicker.textContent = "TIME UP";
     ui.title.textContent = "もう一度つないでみよう";
     ui.result.textContent = "0";
+    ui.hint.textContent = "RETRYを押すと同じルールですぐ再挑戦できます";
     ui.start.textContent = "RETRY";
     ui.overlay.classList.add("is-visible");
     playTone(180, 0.16, "sawtooth", 0.02);
@@ -337,11 +340,8 @@ export function mountVineConnect(root) {
     startStage();
   });
   ui.board.addEventListener("click", handleBoardClick);
-  generateBoard();
-  traceConnection();
-  renderBoard();
-  updateHud();
   frameId = requestAnimationFrame(tick);
+  startStage();
 
   return () => {
     cancelAnimationFrame(frameId);
