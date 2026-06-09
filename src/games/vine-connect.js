@@ -196,6 +196,8 @@ export function mountVineConnect(root) {
       button.dataset.col = String(tile.col);
       button.dataset.shape = shapeFromBase(tile.base);
       button.style.setProperty("--rot", String(tile.rot));
+      button.style.gridColumn = String(tile.col + 2);
+      button.style.gridRow = String(tile.row + 1);
       button.setAttribute("aria-label", `ツル ${tile.row + 1}行 ${tile.col + 1}列`);
       if (connectedSet.has(key(tile.row, tile.col)) && state === "ended") button.classList.add("is-connected");
       button.innerHTML = '<span class="path"></span>';
